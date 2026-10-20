@@ -2,7 +2,7 @@
   "name": "Doc 文档主题",
   "short": "doc",
   "description": "文档风格的状态页：三栏排版、侧边目录、单张大卡片装下整组节点",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "bluesmkun",
   "url": "https://github.com/bluesmkun/docxq",
   "config": [

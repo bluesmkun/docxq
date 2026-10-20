@@ -87,7 +87,12 @@ const Row = memo(function Row({
               </span>
             </>
           ) : null}
-          {m && node.online && m.uptime ? <span className="io">已运行 {uptime(m.uptime)}</span> : null}
+          {/* Its own line, always: sitting beside the rates, this line fits or
+              does not fit depending on how wide the numbers happen to be that
+              second, and the whole block jumps up and down as traffic changes. */}
+          {m && node.online && m.uptime ? (
+            <span className="io uptime">已运行 {uptime(m.uptime)}</span>
+          ) : null}
         </div>
       </div>
 

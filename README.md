@@ -73,7 +73,7 @@ pnpm build && node scripts/mock.mjs
 发版打 tag 即可，`.github/workflows/release.yml` 会构建、打包并把 `theme.tar.gz` 挂到 release 上：
 
 ```bash
-git tag v1.0.1 && git push origin v1.0.1
+git tag v1.0.2 && git push origin v1.0.2
 ```
 
 ## 许可
