@@ -1,0 +1,1981 @@
+/* ==========================================================================
+   Doc 主题：文档站排版 + 卡片式节点布局
+   ========================================================================== */
+
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #fbfbfc;
+  --bg-soft: #f5f6f8;
+  --bg-inset: #f0f2f5;
+  --fg: #1b1f27;
+  --fg-muted: #5b6472;
+  --fg-faint: #8b93a1;
+  --border: #e6e8ec;
+  --border-strong: #d3d7de;
+  --card: #ffffff;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --accent-soft: #eef4ff;
+  --accent-line: #c7dbff;
+  --online: #16a34a;
+  --offline: #9aa3af;
+  --warn: #c2740b;
+  --danger: #d93a3a;
+  --shadow: 0 1px 2px rgb(16 24 40 / 4%);
+  --shadow-lift: 0 8px 24px -12px rgb(16 24 40 / 22%);
+  --radius: 10px;
+  --header-h: 56px;
+  --sidebar-w: 200px;
+  --toc-w: 188px;
+  /* One width for the header row, the document grid and the footer row, so
+     their left and right edges land on the same line at every breakpoint. */
+  --page-max: 1360px;
+  --page-pad: 24px;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+:root[data-accent="green"] {
+  --accent: #0f766e;
+  --accent-soft: #ecfdf7;
+  --accent-line: #b8e6da;
+  --accent-fg: #ffffff;
+}
+:root[data-accent="orange"] {
+  --accent: #b45309;
+  --accent-soft: #fff7ed;
+  --accent-line: #f3d5b0;
+}
+:root[data-accent="violet"] {
+  --accent: #6d28d9;
+  --accent-soft: #f5f2ff;
+  --accent-line: #ddd2fb;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d0f13;
+  --bg-subtle: #101319;
+  --bg-soft: #141821;
+  --bg-inset: #191e28;
+  --fg: #e6e9ef;
+  --fg-muted: #98a1b0;
+  --fg-faint: #6f7887;
+  --border: #232833;
+  --border-strong: #333a47;
+  --card: #11151c;
+  --accent: #5b9dff;
+  --accent-fg: #0b1220;
+  --accent-soft: #142236;
+  --accent-line: #24436b;
+  --online: #3ecf7f;
+  --offline: #6f7887;
+  --warn: #e0a44a;
+  --danger: #f27070;
+  --shadow: none;
+  --shadow-lift: 0 10px 28px -14px rgb(0 0 0 / 70%);
+  color-scheme: dark;
+}
+:root[data-theme="dark"][data-accent="green"] {
+  --accent: #46cbb3;
+  --accent-fg: #06231f;
+  --accent-soft: #0f2622;
+  --accent-line: #1d4a43;
+}
+:root[data-theme="dark"][data-accent="orange"] {
+  --accent: #f0a95a;
+  --accent-fg: #251604;
+  --accent-soft: #2a1f12;
+  --accent-line: #4a3520;
+}
+:root[data-theme="dark"][data-accent="violet"] {
+  --accent: #a78bfa;
+  --accent-fg: #1a1030;
+  --accent-soft: #211a33;
+  --accent-line: #3b2f5c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-padding-top: calc(var(--header-h) + 20px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ 页头 */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--header-h);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+/* The bar spans the viewport; its contents sit on the same column as the
+   sidebar, the article and the footer. */
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  color: var(--fg);
+}
+.brand:hover {
+  text-decoration: none;
+}
+.brand-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.brand-tag {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  color: var(--fg-faint);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  max-width: 42vw;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  color: var(--fg-faint);
+  transition: border-color 0.15s, background 0.15s;
+}
+.search:focus-within {
+  border-color: var(--accent-line);
+  background: var(--bg);
+}
+.search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: none;
+  outline: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+.search input::placeholder {
+  color: var(--fg-faint);
+}
+.search kbd {
+  flex: none;
+  font: 500 11px/1 var(--mono);
+  padding: 3px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--fg-faint);
+  background: var(--bg);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 8px;
+  color: var(--fg-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn:hover {
+  background: var(--bg-soft);
+  color: var(--fg);
+}
+.icon-btn[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* The sidebar is visible from 860px up, so the hamburger is only needed below
+   it; the drawer head it opens is hidden at the same width. */
+.nav-toggle,
+.sidebar-head {
+  display: none;
+}
+
+/* --------------------------------------------------------------- 三栏布局 */
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--toc-w);
+  gap: 0 32px;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
+  align-items: start;
+}
+.layout.no-sidebar {
+  grid-template-columns: minmax(0, 1fr) var(--toc-w);
+}
+.layout.no-toc {
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+}
+.layout.no-sidebar.no-toc {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 920px;
+}
+
+.sidebar,
+.toc {
+  position: sticky;
+  top: var(--header-h);
+  max-height: calc(100vh - var(--header-h));
+  overflow-y: auto;
+  padding: 28px 0 48px;
+  font-size: 13px;
+  scrollbar-width: thin;
+}
+
+.sidebar nav + nav {
+  margin-top: 22px;
+}
+
+.nav-title {
+  margin: 0 0 8px;
+  padding: 0 10px;
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: var(--fg-muted);
+  text-align: left;
+  line-height: 1.5;
+  transition: color 0.12s, background 0.12s;
+}
+.nav-link:hover {
+  color: var(--fg);
+  background: var(--bg-soft);
+  text-decoration: none;
+}
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 500;
+}
+/* A jump link to a section of this same page, set back from the entries that
+   switch scope. */
+.nav-link.sub-link {
+  padding-left: 27px;
+  color: var(--fg-muted);
+}
+
+.nav-link .count {
+  margin-left: auto;
+  color: var(--fg-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.nav-link .dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--offline);
+}
+.nav-link .dot.on {
+  background: var(--online);
+}
+.nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toc .nav-link {
+  padding: 3px 10px;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  font-size: 12.5px;
+}
+.toc .nav-link:hover {
+  background: none;
+  border-left-color: var(--fg-faint);
+}
+.toc .nav-link.active {
+  background: none;
+  border-left: 2px solid var(--accent);
+  color: var(--accent);
+  padding-left: 9px;
+}
+.toc .nav-link.sub {
+  padding-left: 22px;
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ 正文 */
+
+.main {
+  min-width: 0;
+  padding: 36px 0 72px;
+}
+
+.doc-head {
+  margin-bottom: 28px;
+}
+.crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--fg-faint);
+  font-size: 12.5px;
+}
+.crumb a {
+  color: var(--fg-faint);
+}
+.crumb a:hover {
+  color: var(--accent);
+}
+.crumb .sep {
+  opacity: 0.6;
+}
+
+h1.doc-title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  word-break: break-word;
+}
+
+.doc-lead {
+  margin: 10px 0 0;
+  color: var(--fg-muted);
+  font-size: 15px;
+  max-width: 70ch;
+}
+/* The daily line quotes someone: the attribution sits on its own line, quieter
+   than the sentence, and never wraps apart from it. */
+.doc-lead cite {
+  display: block;
+  margin-top: 4px;
+  color: var(--fg-faint);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.section {
+  margin-top: 40px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+h2.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+h2.section-title .hint {
+  margin-left: auto;
+  color: var(--fg-faint);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+h3.sub-title {
+  margin: 24px 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.prose {
+  max-width: 72ch;
+  color: var(--fg-muted);
+}
+.prose p {
+  margin: 0 0 12px;
+}
+.prose code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-inset);
+  font: 12.5px/1.5 var(--mono);
+  color: var(--fg);
+}
+
+/* Operator-written Markdown. The parser hands React a tree of blocks, so these
+   rules only have to space them out. */
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md h3,
+.md h4,
+.md h5 {
+  margin: 22px 0 8px;
+  color: var(--fg);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.md h3 {
+  font-size: 16px;
+}
+.md h4 {
+  font-size: 14px;
+}
+.md h5 {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+.md ul,
+.md ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+.md li {
+  margin: 3px 0;
+}
+.md li::marker {
+  color: var(--fg-faint);
+}
+.md blockquote {
+  margin: 0 0 12px;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--border-strong);
+  color: var(--fg-faint);
+}
+.md blockquote p {
+  margin: 0;
+}
+.md hr {
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.md a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.md a:hover {
+  border-bottom-color: var(--accent);
+}
+.md pre.md-code {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-inset);
+  overflow-x: auto;
+}
+.md pre.md-code code {
+  padding: 0;
+  background: none;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------ 公告 / 提示 */
+
+.notice {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 28px;
+  padding: 12px 14px;
+  border: 1px solid var(--accent-line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--fg);
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.notice svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.alert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 20px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+.alert.danger {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+  background: color-mix(in srgb, var(--danger) 7%, var(--bg));
+  color: var(--danger);
+}
+
+/* -------------------------------------------------------------- 汇总卡片 */
+
+/* The cards sit under the tiles inside one section, so they need their own
+   gap rather than the section's. */
+.nodes-after-summary {
+  margin-top: 20px;
+}
+
+.summary {
+  display: grid;
+  /* Eight tiles: four across on a wide page, two once the page narrows. An
+     explicit column count keeps the last row from leaving a single tile
+     stranded, and 8 splits evenly into either. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tile {
+  position: relative;
+  padding: 13px 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+.tile-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+.tile-label svg {
+  color: var(--fg-faint);
+}
+.tile-value {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.tile-value small {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--fg-faint);
+}
+.tile-foot {
+  margin-top: 4px;
+  color: var(--fg-faint);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 15px;
+  font-weight: 550;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+.flow > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.flow em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fg-faint);
+}
+.flow svg {
+  flex: none;
+  color: var(--fg-faint);
+}
+
+/* The sparkline sits where the other tiles put their footnote, so the eight
+   tiles keep one rhythm. */
+.tile-spark {
+  margin-top: 2px;
+  height: 26px;
+}
+.tile-spark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.tile-note {
+  margin-top: 3px;
+  color: var(--fg-faint);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tile-bar {
+  margin-top: 7px;
+  height: 4px;
+}
+
+/* ------------------------------------------------------------ 单个大卡片 */
+
+.panel-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.panel-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.panel-head span {
+  color: var(--fg-faint);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-row {
+  display: grid;
+  /* The price rail is a fixed track, not `auto`: every row is its own grid, so
+     an auto track would be sized by that row's own price string and the free
+     rows -- which carry no figure at all -- would leave the rail ragged. */
+  grid-template-columns: minmax(150px, 0.95fr) minmax(240px, 1.5fr) 128px;
+  gap: 4px 20px;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.panel-row:first-of-type {
+  border-top: 0;
+}
+.panel-row:hover {
+  background: var(--bg-subtle);
+}
+.panel-row:active {
+  background: var(--bg-soft);
+}
+.panel-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.panel-identity {
+  min-width: 0;
+}
+.panel-identity .remark {
+  margin: 5px 0 0;
+}
+.panel-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 7px;
+  color: var(--fg-faint);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.panel-status .io {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.panel-status .io svg {
+  flex: none;
+}
+
+.panel-meters {
+  display: grid;
+  /* Two by two, not four across: at four the labels and the "used / total"
+     line under each bar wrap, and the row grows taller than the identity it
+     sits beside. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 20px;
+  min-width: 0;
+}
+.panel-meters .meter-top {
+  font-size: 11.5px;
+}
+.panel-meters .meter-foot {
+  font-size: 10.5px;
+}
+.panel-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--fg-faint);
+  font-size: 12px;
+}
+
+.panel-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-left: 16px;
+  border-left: 1px dashed var(--border);
+  align-self: stretch;
+}
+.panel-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.panel-price .amount {
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--fg);
+}
+.panel-price .sep {
+  margin: 0 3px;
+  color: var(--fg-faint);
+}
+.panel-price .muted {
+  color: var(--fg-faint);
+}
+.panel-price .warn {
+  color: var(--warn);
+}
+.panel-price .danger {
+  color: var(--danger);
+}
+.panel-uptime {
+  color: var(--fg-faint);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.panel-go {
+  flex: none;
+  color: var(--fg-faint);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.panel-row:hover .panel-go,
+.panel-row:focus-visible .panel-go {
+  opacity: 1;
+}
+
+/* -------------------------------------------------------------- 节点卡片 */
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 26px 0 12px;
+}
+.group-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.group-head span {
+  color: var(--fg-faint);
+  font-size: 12px;
+}
+
+.cards {
+  display: grid;
+  /* --cols is a ceiling, not a promise: a card narrower than ~250px starts
+     clipping its own numbers, so the track minimum decides how many fit. The
+     preferred width leaves one spare gap of slack, which keeps an exact fit from
+     rounding down to one column fewer. */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(max(250px, calc((100% - var(--cols, 3) * 12px) / var(--cols, 3))), 1fr)
+  );
+  gap: 12px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lift);
+  text-decoration: none;
+}
+.card:active {
+  transform: translateY(1px);
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.card-identity {
+  min-width: 0;
+  flex: 1;
+}
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.card-title h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flag {
+  flex: none;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.flag-code {
+  flex: none;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg-faint);
+  font: 500 10px/1.5 var(--mono);
+}
+.card-sub {
+  margin-top: 3px;
+  color: var(--fg-faint);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--fg-muted);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.status .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--offline);
+}
+.status.on {
+  color: var(--online);
+  border-color: color-mix(in srgb, var(--online) 30%, var(--border));
+  background: color-mix(in srgb, var(--online) 8%, var(--bg));
+}
+.status.on .dot {
+  background: var(--online);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--online) 16%, transparent);
+}
+.status.never .dot {
+  background: transparent;
+  border: 1px dashed var(--fg-faint);
+}
+
+/* The meters, or the sentence that replaces them, live in one box of one
+   height. A node going offline -- or its numbers growing a digit -- then changes
+   the words inside the card, never the card's size, so a row of cards keeps its
+   baseline and the price rail stays level across the row. */
+.card-body {
+  display: grid;
+  align-content: center;
+  min-height: 112px;
+  margin-top: 14px;
+}
+
+.meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+.meter {
+  min-width: 0;
+}
+.meter-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.meter-top b {
+  margin-left: auto;
+  color: var(--fg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.meter-bar {
+  position: relative;
+  height: 4px;
+  margin: 5px 0 4px;
+  border-radius: 2px;
+  background: var(--bg-inset);
+  overflow: hidden;
+}
+.meter-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.meter-bar i.warn {
+  background: var(--warn);
+}
+.meter-bar i.danger {
+  background: var(--danger);
+}
+.meter-foot {
+  color: var(--fg-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Two fixed rows: the rates, then the uptime. The rates keep their slot however
+   many digits they grow (a row that re-wrapped when 9.9 MB/s became 107.9 MB/s
+   would make the card jump under the cursor), and the uptime row is reserved
+   even for an offline node that has none -- an empty line is cheaper than a card
+   that shrinks out of alignment with the row beside it. */
+.card-foot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--fg-faint);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.card-foot .io {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.card-foot .io svg {
+  flex: none;
+  color: var(--fg-faint);
+}
+.card-foot .uptime {
+  display: block;
+  flex: 1 0 100%;
+  /* An explicit line box, so an empty one measures exactly as tall as one
+     holding "已运行 106 天 12 小时". */
+  line-height: 1.5;
+  min-height: 1.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 11.5px;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.card-price .amount {
+  font-weight: 550;
+  color: var(--fg);
+}
+.card-price .sep {
+  margin: 0 3px;
+  opacity: 0.45;
+}
+.card-price .muted {
+  color: var(--fg-faint);
+}
+/* No price and no expiry date is the common case for a home lab node, and it is
+   good news: say so plainly instead of leaving the row empty. */
+.card-price .free,
+.panel-price .free {
+  font-weight: 500;
+  color: var(--online);
+}
+.card-price .warn {
+  color: var(--warn);
+}
+.card-price .danger {
+  color: var(--danger);
+}
+.card-foot .warn {
+  color: var(--warn);
+}
+.card-foot .danger {
+  color: var(--danger);
+}
+
+.remark {
+  margin: 10px 0 0;
+  color: var(--fg-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+/* 未接入：保留卡片高度，但只写一句说明 */
+.card.empty {
+  justify-content: space-between;
+}
+.card-empty-note {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------ 详情页结构 */
+
+/* On a phone the sidebar that holds the node list is gone, so the only way back
+   to it is this bar. It is hidden where the breadcrumb is already clickable. */
+.back-bar {
+  display: none;
+  margin-bottom: 14px;
+}
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--fg-muted);
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+}
+.back-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--fg);
+}
+.back-btn:active {
+  background: var(--bg-inset);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-subtle);
+}
+.facts div {
+  min-width: 0;
+}
+.facts dt {
+  color: var(--fg-faint);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+.facts dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.facts dd.mono {
+  font-size: 12.5px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tabs {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  gap: 2px;
+}
+.tab {
+  padding: 3px 10px;
+  border-radius: 6px;
+  color: var(--fg-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  transition: background 0.12s, color 0.12s;
+}
+.tab:hover {
+  color: var(--fg);
+}
+.tab[aria-pressed="true"] {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: var(--shadow);
+  font-weight: 500;
+}
+/* A tab that switches an aid rather than a view carries its own icon. */
+.tab-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-soft);
+}
+.tab-icon svg {
+  flex: none;
+  color: var(--fg-faint);
+}
+.tab-icon[aria-pressed="true"] svg {
+  color: var(--accent);
+}
+/* The two aids are one group: wrapping them apart on a narrow screen put
+   "平滑" at the left edge and "削峰" at the right, looking like two rows. */
+.aids {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar .right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar .meta {
+  color: var(--fg-faint);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-card {
+  padding: 14px 14px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.chart-card + .chart-card {
+  margin-top: 12px;
+}
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.chart-head h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.chart-head .legend {
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--fg-faint);
+  font-size: 11.5px;
+}
+.chart-head .legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.chart-head .legend i {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+.chart-head .legend i.dash {
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px);
+}
+
+.chart {
+  position: relative;
+  width: 100%;
+  user-select: none;
+  touch-action: pan-y;
+}
+.chart svg {
+  display: block;
+  overflow: visible;
+}
+.chart text {
+  fill: var(--fg-faint);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.chart .grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.chart .axis-line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.chart .crosshair {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.chart .empty-note {
+  fill: var(--fg-faint);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  min-width: 132px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow-lift);
+  color: var(--fg);
+  font-size: 11.5px;
+  line-height: 1.55;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tooltip .tt-time {
+  color: var(--fg-faint);
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.tooltip .tt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.tooltip .tt-row i {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+  background: currentColor;
+}
+.tooltip .tt-row b {
+  margin-left: auto;
+  font-weight: 500;
+}
+.tooltip .tt-row span {
+  color: var(--fg-muted);
+}
+
+/* 探针图例：可点掉慢的线路 */
+.probes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.probe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--fg-muted);
+  font-size: 11.5px;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+.probe i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+.probe[aria-pressed="false"] {
+  opacity: 0.42;
+}
+.probe .loss {
+  color: var(--warn);
+  font-variant-numeric: tabular-nums;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 20px;
+  margin: 0;
+  font-size: 13px;
+}
+.kv dt {
+  color: var(--fg-faint);
+}
+.kv dd {
+  margin: 0;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--fg-faint);
+  text-align: center;
+  font-size: 13px;
+}
+
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-soft) 25%, var(--bg-inset) 37%, var(--bg-soft) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* The page footer spans the viewport and closes the whole document, rather than
+   sitting at the bottom of the article column where it would look like the end
+   of the text. Its inner row keeps the same width and gutters as `.layout`, so
+   the left edge lines up with the sidebar. `margin-top: auto` pins it to the
+   bottom on a site with one node, where the article is shorter than the window. */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+/* One hairline and a line of small text: the footer marks where the document
+   ends, it does not decorate it. */
+.footer {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  color: var(--fg-faint);
+  font-size: 12px;
+}
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 16px var(--page-pad);
+}
+.footer-brand {
+  color: var(--fg-muted);
+  font-weight: 550;
+}
+.footer-note {
+  color: var(--fg-muted);
+  min-width: 0;
+}
+.footer-spacer {
+  flex: 1 1 auto;
+}
+.footer a {
+  color: var(--fg-faint);
+}
+@media (max-width: 640px) {
+  /* On a phone the facts stack: the spacer would otherwise push the last two
+     items to the far right of their own lines. */
+  .footer-spacer {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- 设置面板 */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(12 16 24 / 16%);
+  backdrop-filter: blur(1.5px);
+  animation: fade 0.16s ease;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 100vw);
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  box-shadow: -20px 0 60px -30px rgb(0 0 0 / 40%);
+  animation: slide 0.2s ease;
+}
+@keyframes slide {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.drawer-head .close {
+  margin-left: auto;
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 18px 24px;
+}
+.drawer-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.drawer-foot .msg {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-faint);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.drawer-foot .msg.ok {
+  color: var(--online);
+}
+.drawer-foot .msg.bad {
+  color: var(--danger);
+}
+
+.field-group {
+  margin: 20px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.field {
+  margin: 16px 0;
+}
+.field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.field-help {
+  margin-top: 5px;
+  color: var(--fg-faint);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.textarea {
+  min-height: 76px;
+  resize: vertical;
+  line-height: 1.6;
+}
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--fg-faint) 50%),
+    linear-gradient(135deg, var(--fg-faint) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .track {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-strong);
+  transition: background 0.15s, border-color 0.15s;
+}
+.switch .track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--fg-faint);
+  transition: transform 0.15s, background 0.15s;
+}
+.switch input:checked + .track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.switch input:checked + .track::after {
+  transform: translateX(14px);
+  background: var(--accent-fg);
+}
+.switch input:focus-visible + .track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover {
+  background: var(--bg-soft);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.btn.primary:hover {
+  filter: brightness(1.06);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------- 响应式 */
+
+/* The panel row is the first thing to run out of width: the sidebar and the
+   contents rail eat 440px before the card starts, so its three columns collapse
+   well before the layout itself does. */
+@media (max-width: 1280px) {
+  .panel-row {
+    grid-template-columns: minmax(0, 1fr) 128px;
+    gap: 10px 18px;
+  }
+  .panel-meters {
+    grid-column: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 18px;
+  }
+  .panel-side {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  }
+  .toc {
+    display: none;
+  }
+}
+
+/* The sidebar is a drawer up to tablet width: a fixed 200px column plus the
+   table of contents leaves too little room to read on a landscape tablet, and a
+   touch screen has no hover to discover it. Above this the three-column
+   document layout still fits. */
+@media (max-width: 1024px) {
+  .layout,
+  .layout.no-sidebar,
+  .layout.no-toc {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 1000px;
+  }
+  /* The document is a single centred column now, so the header and the footer
+     narrow with it rather than stretching past it. */
+  :root {
+    --page-max: 1000px;
+  }
+  /* Below this width the sidebar becomes a drawer over the page: hiding it
+     outright left a phone with no way to reach the admin panel. */
+  .nav-toggle {
+    display: inline-grid;
+  }
+  .sidebar {
+    display: block;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 51;
+    width: min(252px, 82vw);
+    max-height: none;
+    padding: 0 0 32px;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    box-shadow: 24px 0 60px -40px rgb(0 0 0 / 45%);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s;
+    overflow-y: auto;
+  }
+  .sidebar.open {
+    transform: none;
+    visibility: visible;
+  }
+  .sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 10px 12px 20px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .sidebar-head span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .nav-scrim {
+    z-index: 50;
+  }
+}
+
+@media (max-width: 860px) {
+  :root {
+    --page-pad: 18px;
+  }
+  /* Four across squeezes a tile under ~200px, where the value and its footnote
+     start wrapping. Two keeps the four rows even. */
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .layout,
+  .layout.no-sidebar,
+  .layout.no-toc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .header-inner {
+    gap: 10px;
+  }
+  /* The header is a flex row: a fixed 100% search would push the brand and the
+     buttons off the edge instead of sharing the space. */
+  .search {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+  .search kbd {
+    display: none;
+  }
+  .brand-tag {
+    display: none;
+  }
+  .main {
+    padding-top: 26px;
+  }
+  h1.doc-title {
+    font-size: 24px;
+  }
+  /* With no sidebar the breadcrumb's "首页" is the only way back, and on a
+     touch screen it is too small a target: the bar above the title is the
+     one to press. */
+  .back-bar {
+    display: block;
+  }
+
+  .panel-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px;
+  }
+  .panel-meters {
+    grid-column: 1;
+    grid-row: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .panel-side {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 0;
+    border-left: 0;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .panel-price {
+    align-items: flex-start;
+  }
+  .panel-go {
+    display: none;
+  }
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .toolbar .right {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 520px) {
+  /* The search field's content size is a full placeholder, and on a phone that
+     leaves the site name three characters wide. The brand keeps its width and
+     the field gives way instead. */
+  .brand {
+    flex: none;
+  }
+  .brand-text {
+    max-width: 120px;
+  }
+  .meters {
+    gap: 8px 12px;
+  }
+  .tile-value {
+    font-size: 17px;
+  }
+  .panel-meters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .toolbar .right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

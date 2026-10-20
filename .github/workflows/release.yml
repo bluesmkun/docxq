@@ -1,0 +1,41 @@
+name: release
+
+# Pushing a tag like v1.1.0 builds theme.tar.gz and attaches it to a release.
+# theme.json's version must match the tag (v1.1.0 -> 1.1.0): the hub's
+# one-click update compares the two and reinstalls whenever they differ.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm run pack
+      - run: gzip -t theme.tar.gz
+
+      - name: Check the tag matches theme.json
+        run: |
+          version=$(node -p 'require("./theme.json").version')
+          if [ "v$version" != "${GITHUB_REF_NAME}" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match version $version" >&2
+            exit 1
+          fi
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: theme.tar.gz
+          generate_release_notes: true

@@ -1,0 +1,5 @@
+node_modules
+dist
+theme.tar.gz
+*.tsbuildinfo
+.DS_Store

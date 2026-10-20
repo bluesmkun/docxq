@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="状态文档">
+  <rect width="64" height="64" rx="12" fill="#2563eb" />
+  <g fill="none" stroke="#ffffff" stroke-width="2.9" stroke-linecap="square" stroke-linejoin="round">
+    <rect x="12.8" y="10.9" width="38.4" height="42.2" rx="3.5" />
+    <path d="M21.4 10.9v42.2" />
+    <path d="M27.8 22.1h17.1M27.8 30.4h11.5M27.8 38.7h6.4" />
+  </g>
+</svg>

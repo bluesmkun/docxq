@@ -1,0 +1,203 @@
+{
+  "name": "Doc 文档主题",
+  "short": "doc",
+  "description": "文档风格的状态页：三栏排版、侧边目录、单张大卡片装下整组节点",
+  "version": "1.0.0",
+  "author": "bluesmkun",
+  "url": "https://github.com/bluesmkun/docxq",
+  "config": [
+    {
+      "type": "title",
+      "label": "首页"
+    },
+    {
+      "key": "notice",
+      "type": "text",
+      "label": "公告",
+      "default": "",
+      "help": "显示在页面顶部的提示框，留空不显示"
+    },
+    {
+      "key": "quote",
+      "type": "text",
+      "label": "每日一言",
+      "default": "",
+      "help": "每行一句，可用「正文 —— 作者」标注出处。留空则使用主题自带的名言。每天按日期轮换一句。"
+    },
+    {
+      "key": "show_summary",
+      "type": "boolean",
+      "label": "显示汇总",
+      "default": true,
+      "help": "节点列表上方的八张概览卡片"
+    },
+    {
+      "key": "sidebar",
+      "type": "boolean",
+      "label": "显示左侧目录",
+      "default": true
+    },
+    {
+      "key": "footer",
+      "type": "string",
+      "label": "页脚文字",
+      "default": "",
+      "help": "显示在页面底部，留空不显示"
+    },
+    {
+      "type": "title",
+      "label": "节点卡片"
+    },
+    {
+      "key": "layout",
+      "type": "select",
+      "label": "布局",
+      "default": "panel",
+      "options": [
+        {
+          "value": "panel",
+          "label": "单个大卡片"
+        },
+        {
+          "value": "cards",
+          "label": "小卡片网格"
+        }
+      ],
+      "help": "单个大卡片把整组节点装进一张卡片，用小卡片网格则每个节点一张"
+    },
+    {
+      "key": "show_usage",
+      "type": "boolean",
+      "label": "显示资源进度条",
+      "default": true
+    },
+    {
+      "key": "show_price",
+      "type": "boolean",
+      "label": "显示价格与到期",
+      "default": true
+    },
+    {
+      "key": "show_remark",
+      "type": "boolean",
+      "label": "显示公开备注",
+      "default": true
+    },
+    {
+      "key": "columns",
+      "type": "number",
+      "label": "网格列数",
+      "default": 3,
+      "min": 1,
+      "max": 5,
+      "help": "仅在小卡片网格布局下生效；窗口放不下时自动减少"
+    },
+    {
+      "type": "title",
+      "label": "外观"
+    },
+    {
+      "key": "accent",
+      "type": "select",
+      "label": "强调色",
+      "default": "blue",
+      "options": [
+        {
+          "value": "blue",
+          "label": "文档蓝"
+        },
+        {
+          "value": "green",
+          "label": "墨绿"
+        },
+        {
+          "value": "orange",
+          "label": "琥珀"
+        },
+        {
+          "value": "violet",
+          "label": "紫罗兰"
+        }
+      ]
+    },
+    {
+      "key": "dark",
+      "type": "select",
+      "label": "默认深浅色",
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": "跟随系统"
+        },
+        {
+          "value": "light",
+          "label": "浅色"
+        },
+        {
+          "value": "dark",
+          "label": "深色"
+        }
+      ],
+      "help": "访客仍可用页头的按钮切换"
+    },
+    {
+      "type": "title",
+      "label": "剩余价值"
+    },
+    {
+      "key": "currency",
+      "type": "select",
+      "label": "结算货币",
+      "default": "CNY",
+      "options": [
+        {
+          "value": "CNY",
+          "label": "人民币 CNY"
+        },
+        {
+          "value": "USD",
+          "label": "美元 USD"
+        },
+        {
+          "value": "HKD",
+          "label": "港币 HKD"
+        },
+        {
+          "value": "EUR",
+          "label": "欧元 EUR"
+        },
+        {
+          "value": "JPY",
+          "label": "日元 JPY"
+        }
+      ],
+      "help": "概览里的「剩余价值」按这个货币显示，汇率每天自动更新"
+    },
+    {
+      "key": "fx_rates",
+      "type": "string",
+      "label": "手动汇率",
+      "default": "",
+      "help": "自动汇率取不到时使用，写成「1 单位外币 = 多少人民币」，例如 USD=7.2, HKD=0.92"
+    },
+    {
+      "type": "title",
+      "label": "关于本站"
+    },
+    {
+      "key": "about_title",
+      "type": "string",
+      "label": "标题",
+      "default": "关于本站",
+      "help": "左侧目录和页面上的小标题"
+    },
+    {
+      "key": "about",
+      "type": "text",
+      "label": "正文",
+      "default": "",
+      "help": "支持 Markdown：标题、列表、粗体、行内代码、链接、引用和分隔线。留空则显示主题自带的说明"
+    }
+  ]
+}
