@@ -69,7 +69,7 @@ function custom(spec: string): Quote[] {
 }
 
 /** Whole days since the epoch on the visitor's own calendar, so the line turns over at midnight. */
-function dayNumber(now: Date): number {
+export function dayNumber(now: Date): number {
   return Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000)
 }
 
@@ -84,4 +84,49 @@ export function quoteOfTheDay(spec: string, now = new Date()): Quote | null {
   const day = dayNumber(now)
   // `%` in JS keeps the sign, and a pre-1970 clock would index backwards.
   return pool[((day % pool.length) + pool.length) % pool.length]
+}
+
+/* ------------------------------------------------------------ 远程接口 */
+
+/**
+ * A quote API is whatever the operator points at, so the shape is a guess:
+ * 一言 and its clones answer `{ hitokoto, from }`, others `{ text, author }` or
+ * a bare line of text. Anything else is treated as "no answer" and the local
+ * pool takes over — a status page must not go blank because an API changed.
+ */
+export function parseQuote(payload: unknown): Quote | null {
+  if (typeof payload === "string") {
+    // An endpoint that answers with a page (a proxy error, a wrong URL) must not
+    // become a quote: the whole document would be printed as one long line.
+    const head = payload.replace(/^\uFEFF?\s*/, "").slice(0, 1)
+    if (head === "<" || head === "{") return null
+    return oneLine(payload)
+  }
+  if (Array.isArray(payload)) {
+    for (const item of payload) {
+      const found = parseQuote(item)
+      if (found) return found
+    }
+    return null
+  }
+  if (!payload || typeof payload !== "object") return null
+  const row = payload as Record<string, unknown>
+  const text = [row.hitokoto, row.text, row.content, row.quote, row.sentence, row.msg].find(
+    (v): v is string => typeof v === "string" && v.trim() !== "",
+  )
+  if (!text) return null
+  const author = [row.from_who, row.author, row.from, row.source].find(
+    (v): v is string => typeof v === "string" && v.trim() !== "",
+  )
+  return { text: text.trim(), author: (author ?? "").trim() }
+}
+
+/** "正文 —— 作者" in a plain-text answer still keeps its attribution. */
+function oneLine(line: string): Quote | null {
+  const text = line.replace(/^\uFEFF/, "").trim()
+  if (!text) return null
+  const cut = text.split(/\s*(?:——|--)\s*/)
+  return cut.length > 1
+    ? { text: cut[0].trim(), author: cut.slice(1).join(" ").trim() }
+    : { text, author: "" }
 }

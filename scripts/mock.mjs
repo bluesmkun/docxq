@@ -247,6 +247,14 @@ const server = createServer((req, res) => {
     })
   }
 
+  // A stand-in for whatever quote API an operator points the theme at: the
+  // 一言 shape, so the parser is exercised against the common case.
+  if (path === "/mock/quote") {
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" })
+    res.end(JSON.stringify({ hitokoto: "机器会坏，记录不会。", from: "运维老张", from_who: "运维老张" }))
+    return
+  }
+
   if (path === "/api/themes/doc/config") {
     if (req.method === "PUT") {
       let body = ""

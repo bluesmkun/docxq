@@ -5,7 +5,7 @@ import { flag, num, text, type Values } from "@/lib/config"
 import { windows } from "@/lib/format"
 import { useFx, type Table } from "@/lib/fx"
 import { useConfig, useMe, useRoute, useTheme } from "@/lib/hooks"
-import { quoteOfTheDay } from "@/lib/quote"
+import { useQuote } from "@/lib/useQuote"
 import { ALL, inScope, OFFLINE, ONLINE, scopeLabel, type Scope } from "@/lib/scope"
 import { Markdown } from "@/components/Markdown"
 import { NodeCard } from "@/components/NodeCard"
@@ -453,7 +453,7 @@ export function App() {
   const site = me?.site_name || "状态页"
   const currency = text(values ?? {}, "currency", "CNY") || "CNY"
   const { table: fx } = useFx(text(values ?? {}, "fx_rates", ""))
-  const quote = quoteOfTheDay(text(values ?? {}, "quote", ""))
+  const quote = useQuote(text(values ?? {}, "quote", ""), text(values ?? {}, "quote_api", ""))
   const aboutTitle = text(values ?? {}, "about_title", "").trim() || "关于本站"
   const about = text(values ?? {}, "about", "").trim()
   // The tab title follows the site name, and on a detail page names the node:

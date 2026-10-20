@@ -1189,30 +1189,44 @@ h3.sub-title {
 
 /* ------------------------------------------------------------ 详情页结构 */
 
-/* On a phone the sidebar that holds the node list is gone, so the only way back
-   to it is this bar. It is hidden where the breadcrumb is already clickable. */
+/* A way back from a node page on every screen, not just where the sidebar has
+   folded away: a detail page opened from a chat link has no history to go back
+   through, and the breadcrumb is one small word. Set as a quiet line of text
+   rather than a button — it belongs to the document, not to a toolbar. */
 .back-bar {
-  display: none;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-soft);
-  color: var(--fg-muted);
-  font-size: 13px;
-  transition: background 0.15s, color 0.15s;
+  gap: 3px;
+  margin-left: -4px;
+  padding: 3px 6px 3px 4px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--fg-faint);
+  font-size: 12.5px;
+  line-height: 1.4;
+  transition: color 0.12s, background 0.12s;
+}
+.back-btn svg {
+  flex: none;
+  transition: transform 0.12s;
 }
 .back-btn:hover {
-  background: var(--bg-subtle);
   color: var(--fg);
+  background: var(--bg-soft);
+}
+.back-btn:hover svg {
+  transform: translateX(-1px);
 }
 .back-btn:active {
   background: var(--bg-inset);
+}
+.back-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .facts {
@@ -1902,13 +1916,6 @@ h3.sub-title {
   h1.doc-title {
     font-size: 24px;
   }
-  /* With no sidebar the breadcrumb's "首页" is the only way back, and on a
-     touch screen it is too small a target: the bar above the title is the
-     one to press. */
-  .back-bar {
-    display: block;
-  }
-
   .panel-row {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;

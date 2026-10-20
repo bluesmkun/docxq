@@ -29,7 +29,7 @@ import {
   withGaps,
 } from "@/lib/format"
 import { Chart, type ChartSeries } from "@/components/Chart"
-import { IconChevronLeft, IconFilter, IconInfo, IconSmooth } from "@/components/icons"
+import { IconChevronLeft, IconFilter, IconSmooth } from "@/components/icons"
 
 /* ------------------------------------------------------------------ 数据 */
 
@@ -446,10 +446,6 @@ function ResourceCharts({ node, hours, points }: { node: Node; hours: number; po
           />
         </div>
       ))}
-      <p className="prose" style={{ marginTop: 12, fontSize: 12 }}>
-        折线在节点离线处断开。每点覆盖 {Math.round(history.step / 60)} 分钟。
-        {m ? ` 采样自 ${rows.length} 个点。` : ""}
-      </p>
     </>
   )
 }
@@ -499,16 +495,12 @@ function LatencyCharts({
   // its neighbours untouched, whereas averaging first would spread the spike
   // over five points and the filter would no longer see one outlier.
   // Neither touches the nulls: a failed probe is a hole, not a high reading.
-  let dropped = 0
-  let averaged = 0
   const series: ChartSeries[] = shown.map((id) => {
     const byTime = new Map<number, number | null>()
     for (const row of history.ping) if (row.task_id === id) byTime.set(row.ts * 1000, typeof row.latency === "number" ? row.latency : null)
     const raw = times.map((t) => byTime.get(t * 1000) ?? null)
     const spiked = spike ? despike(raw) : raw
-    if (spike) raw.forEach((v, i) => { if (v !== null && spiked[i] !== v) dropped++ })
     const points = avg ? smooth(spiked) : spiked
-    if (avg) spiked.forEach((v, i) => { if (v !== null && points[i] !== v) averaged++ })
     return {
       label: history.probes[id] || id,
       color: PALETTE[ids.indexOf(id) % PALETTE.length],
@@ -571,15 +563,6 @@ function LatencyCharts({
         })}
       </div>
 
-      <div className="alert" style={{ marginTop: 14 }}>
-        <IconInfo />
-        <span>
-          丢包率是整个时间窗的平均值；曲线上的断点表示那次探测没有响应。
-          {spike ? (dropped > 0 ? ` 削峰替换了 ${dropped} 个孤立的尖峰。` : " 削峰已打开，没有需要替换的尖峰。") : ""}
-          {avg ? (averaged > 0 ? ` 平滑改写了 ${averaged} 个读数，整条曲线更平缓。` : " 平滑已打开，没有可平均的读数。") : ""}
-          {spike || avg ? " 断点都没有动。" : ""}
-        </span>
-      </div>
     </>
   )
 }

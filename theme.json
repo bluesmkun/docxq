@@ -2,7 +2,7 @@
   "name": "Doc 文档主题",
   "short": "doc",
   "description": "文档风格的状态页：三栏排版、侧边目录、单张大卡片装下整组节点",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "bluesmkun",
   "url": "https://github.com/bluesmkun/docxq",
   "config": [
@@ -23,6 +23,13 @@
       "label": "每日一言",
       "default": "",
       "help": "每行一句，可用「正文 —— 作者」标注出处。留空则使用主题自带的名言。每天按日期轮换一句。"
+    },
+    {
+      "key": "quote_api",
+      "type": "string",
+      "label": "每日一言接口",
+      "default": "",
+      "help": "填一个能返回一句的地址，每天取一次。支持一言（hitokoto）风格的 JSON，也接受纯文本。留空则用上面的句子；接口失败时自动退回本地句子。"
     },
     {
       "key": "show_summary",
